@@ -7541,11 +7541,19 @@ function drawHUD(game) {
   const touch = !!game.isTouch;
   const slot = 52 * u;
   const gap = 10 * u;
-  const slotY = cssH - (touch ? 22 : 34) * u - slot;
-  /* 触屏时摇杆占左侧，装备槽改为底部居中，避免互相遮挡 */
-  let slotX = touch
-    ? Math.max(margin, (cssW - (slot * 5 + gap * 4)) / 2)
-    : margin;
+  let slotX;
+  let slotY;
+  if (touch) {
+    /* 触屏：整排移到右上角技能键下方，把画面底部让给战斗 */
+    const uiScale = parseFloat(
+      getComputedStyle(document.documentElement).getPropertyValue('--ui-scale')
+    ) || 1;
+    slotX = cssW - 16 - (slot * 5 + gap * 4);
+    slotY = 86 + 52 * uiScale + 12;
+  } else {
+    slotX = margin;
+    slotY = cssH - 34 * u - slot;
+  }
 
   /* 主手武器(Q 切换) */
   const weapon = player.weaponItem();
