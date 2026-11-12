@@ -285,7 +285,20 @@ function resize() {
   game.canvas.height = Math.round(h * dpr);
   game.canvas.style.width = w + 'px';
   game.canvas.style.height = h + 'px';
-  game.scale = Math.max(0.42, h / WORLD_H);
+  const baseScale = Math.max(0.42, h / WORLD_H);
+  const touch = ('ontouchstart' in window) || (navigator.maxTouchPoints || 0) > 0;
+  game.isTouch = touch;
+  if (touch) {
+    /* 手机横屏又宽又矮：纯按高度缩放会让可视范围过宽、角色偏小，
+       这里按"最多看到 1400 逻辑像素宽"温和放大，最多放 35%。 */
+    const wideScale = w / 1400;
+    game.scale = Math.min(Math.max(baseScale, wideScale), baseScale * 1.35);
+    /* 触屏按钮随屏幕高度自适应，小屏不拥挤、大屏不显小 */
+    const uiScale = clamp(h / 720, 0.78, 1.12);
+    document.documentElement.style.setProperty('--ui-scale', uiScale.toFixed(3));
+  } else {
+    game.scale = baseScale;
+  }
   game.viewW = w / game.scale;
   if (game.level) {
     game.cam.x = clamp(game.cam.x, 0, Math.max(0, game.level.width - game.viewW));

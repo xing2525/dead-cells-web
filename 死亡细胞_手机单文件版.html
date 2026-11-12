@@ -2,8 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>死亡细胞 · 无间回廊（手机单文件版）</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>死亡细胞 · 无间回廊（手机版）</title>
 <meta name="theme-color" content="#060b0e">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 3c4 6 9 8 9 15a9 9 0 1 1-18 0c0-4 2-6 4-9 1 3 2 4 3 4 0-4 1-7 2-10z' fill='%2367e8f9'/%3E%3C/svg%3E">
 <style>
@@ -445,6 +445,8 @@ body.is-touch.playing .touch-ui{display:block;}
   align-items:center;
   justify-content:center;
   backdrop-filter:blur(2px);
+  transform:scale(var(--ui-scale,1));
+  transform-origin:bottom left;
 }
 .touch-knob{
   width:52px;
@@ -461,6 +463,8 @@ body.is-touch.playing .touch-ui{display:block;}
   width:196px;
   height:196px;
   pointer-events:none;
+  transform:scale(var(--ui-scale,1));
+  transform-origin:bottom right;
 }
 .touch-btn{
   position:absolute;
@@ -555,14 +559,11 @@ body.is-touch #rotate-hint .btn{
   body.is-touch #rotate-hint{display:none;}
 }
 
-/* 横屏矮屏：操作层整体缩小，避免挡视野 */
+/* 横屏矮屏：菜单压缩，操作层尺寸由 --ui-scale 自适应控制 */
 @media (orientation: landscape) and (max-height: 540px){
-  .touch-pad{transform:scale(.84);transform-origin:bottom right;}
   .touch-stick{
     width:104px;
     height:104px;
-    transform:scale(.9);
-    transform-origin:bottom left;
   }
   .touch-knob{width:44px;height:44px;}
   body.is-touch .menu-layout{padding:14px 26px;}
@@ -7058,7 +7059,12 @@ function drawMerchantAndCollector(game) {
 function drawTutorialHints(game) {
   const { ctx, player } = game;
   if (!player || player.x > 980) return;
-  const hints = [
+  const hints = game.isTouch ? [
+    { x: 292, y: 512, text: '左侧摇杆  移动' },
+    { x: 520, y: 512, text: '跳跃键  连点两次可二段跳' },
+    { x: 748, y: 512, text: '攻击键  斩击' },
+    { x: 950, y: 512, text: '翻滚键  闪避' }
+  ] : [
     { x: 292, y: 512, text: 'A / D  移动' },
     { x: 520, y: 512, text: 'SPACE  跳跃' },
     { x: 748, y: 512, text: 'J  斩击' },
@@ -7513,10 +7519,14 @@ function drawHUD(game) {
   ctx.fillText(`威胁 ${alive}`, cssW - margin, 78 * u);
 
   /* 装备槽:武器 / 盾 / 技能1 / 技能2 / 药水 */
+  const touch = !!game.isTouch;
   const slot = 52 * u;
   const gap = 10 * u;
-  const slotY = cssH - 34 * u - slot;
-  let slotX = margin;
+  const slotY = cssH - (touch ? 22 : 34) * u - slot;
+  /* 触屏时摇杆占左侧，装备槽改为底部居中，避免互相遮挡 */
+  let slotX = touch
+    ? Math.max(margin, (cssW - (slot * 5 + gap * 4)) / 2)
+    : margin;
 
   /* 主手武器(Q 切换) */
   const weapon = player.weaponItem();
@@ -7566,11 +7576,13 @@ function drawHUD(game) {
   ctx.fillStyle = player.potions > 0 ? 'rgba(150,240,210,0.95)' : 'rgba(220,110,110,0.95)';
   ctx.fillText('×' + player.potions, slotX + slot - 4 * u, slotY - 5 * u);
 
-  /* 操作提示 */
-  ctx.textAlign = 'right';
-  ctx.font = `500 ${10.5 * u}px "Noto Sans SC","Microsoft YaHei",sans-serif`;
-  ctx.fillStyle = 'rgba(140,172,176,0.5)';
-  ctx.fillText('J 攻击   K 翻滚   Q 换武器   L 举盾   U/I 技能   E 拾取   ESC 暂停', cssW - margin, cssH - 34 * u);
+  /* 操作提示（触屏已有虚拟按键，不显示键盘提示） */
+  if (!touch) {
+    ctx.textAlign = 'right';
+    ctx.font = `500 ${10.5 * u}px "Noto Sans SC","Microsoft YaHei",sans-serif`;
+    ctx.fillStyle = 'rgba(140,172,176,0.5)';
+    ctx.fillText('J 攻击   K 翻滚   Q 换武器   L 举盾   U/I 技能   E 拾取   ESC 暂停', cssW - margin, cssH - 34 * u);
+  }
   if (game.muted) {
     ctx.fillStyle = 'rgba(226,84,90,0.75)';
     ctx.fillText('静音中', cssW - margin, cssH - 50 * u);
@@ -8150,7 +8162,20 @@ function resize() {
   game.canvas.height = Math.round(h * dpr);
   game.canvas.style.width = w + 'px';
   game.canvas.style.height = h + 'px';
-  game.scale = Math.max(0.42, h / WORLD_H);
+  const baseScale = Math.max(0.42, h / WORLD_H);
+  const touch = ('ontouchstart' in window) || (navigator.maxTouchPoints || 0) > 0;
+  game.isTouch = touch;
+  if (touch) {
+    /* 手机横屏又宽又矮：纯按高度缩放会让可视范围过宽、角色偏小，
+       这里按"最多看到 1400 逻辑像素宽"温和放大，最多放 35%。 */
+    const wideScale = w / 1400;
+    game.scale = Math.min(Math.max(baseScale, wideScale), baseScale * 1.35);
+    /* 触屏按钮随屏幕高度自适应，小屏不拥挤、大屏不显小 */
+    const uiScale = clamp(h / 720, 0.78, 1.12);
+    document.documentElement.style.setProperty('--ui-scale', uiScale.toFixed(3));
+  } else {
+    game.scale = baseScale;
+  }
   game.viewW = w / game.scale;
   if (game.level) {
     game.cam.x = clamp(game.cam.x, 0, Math.max(0, game.level.width - game.viewW));
@@ -10188,11 +10213,11 @@ function setupTouchControls() {
       e.preventDefault();
     }, { passive: false });
     el.addEventListener('touchend', (e) => {
-      if (b.hold) touchRelease(b.code);
+      touchRelease(b.code);
       e.preventDefault();
     }, { passive: false });
     el.addEventListener('touchcancel', () => {
-      if (b.hold) touchRelease(b.code);
+      touchRelease(b.code);
     });
     pad.appendChild(el);
   }

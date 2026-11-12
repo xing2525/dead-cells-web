@@ -1006,7 +1006,12 @@ function drawMerchantAndCollector(game) {
 function drawTutorialHints(game) {
   const { ctx, player } = game;
   if (!player || player.x > 980) return;
-  const hints = [
+  const hints = game.isTouch ? [
+    { x: 292, y: 512, text: '左侧摇杆  移动' },
+    { x: 520, y: 512, text: '跳跃键  连点两次可二段跳' },
+    { x: 748, y: 512, text: '攻击键  斩击' },
+    { x: 950, y: 512, text: '翻滚键  闪避' }
+  ] : [
     { x: 292, y: 512, text: 'A / D  移动' },
     { x: 520, y: 512, text: 'SPACE  跳跃' },
     { x: 748, y: 512, text: 'J  斩击' },

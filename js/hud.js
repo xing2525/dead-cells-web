@@ -365,10 +365,14 @@ function drawHUD(game) {
   ctx.fillText(`威胁 ${alive}`, cssW - margin, 78 * u);
 
   /* 装备槽:武器 / 盾 / 技能1 / 技能2 / 药水 */
+  const touch = !!game.isTouch;
   const slot = 52 * u;
   const gap = 10 * u;
-  const slotY = cssH - 34 * u - slot;
-  let slotX = margin;
+  const slotY = cssH - (touch ? 22 : 34) * u - slot;
+  /* 触屏时摇杆占左侧，装备槽改为底部居中，避免互相遮挡 */
+  let slotX = touch
+    ? Math.max(margin, (cssW - (slot * 5 + gap * 4)) / 2)
+    : margin;
 
   /* 主手武器(Q 切换) */
   const weapon = player.weaponItem();
@@ -418,11 +422,13 @@ function drawHUD(game) {
   ctx.fillStyle = player.potions > 0 ? 'rgba(150,240,210,0.95)' : 'rgba(220,110,110,0.95)';
   ctx.fillText('×' + player.potions, slotX + slot - 4 * u, slotY - 5 * u);
 
-  /* 操作提示 */
-  ctx.textAlign = 'right';
-  ctx.font = `500 ${10.5 * u}px "Noto Sans SC","Microsoft YaHei",sans-serif`;
-  ctx.fillStyle = 'rgba(140,172,176,0.5)';
-  ctx.fillText('J 攻击   K 翻滚   Q 换武器   L 举盾   U/I 技能   E 拾取   ESC 暂停', cssW - margin, cssH - 34 * u);
+  /* 操作提示（触屏已有虚拟按键，不显示键盘提示） */
+  if (!touch) {
+    ctx.textAlign = 'right';
+    ctx.font = `500 ${10.5 * u}px "Noto Sans SC","Microsoft YaHei",sans-serif`;
+    ctx.fillStyle = 'rgba(140,172,176,0.5)';
+    ctx.fillText('J 攻击   K 翻滚   Q 换武器   L 举盾   U/I 技能   E 拾取   ESC 暂停', cssW - margin, cssH - 34 * u);
+  }
   if (game.muted) {
     ctx.fillStyle = 'rgba(226,84,90,0.75)';
     ctx.fillText('静音中', cssW - margin, cssH - 50 * u);

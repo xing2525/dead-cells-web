@@ -121,11 +121,11 @@ function setupTouchControls() {
       e.preventDefault();
     }, { passive: false });
     el.addEventListener('touchend', (e) => {
-      if (b.hold) touchRelease(b.code);
+      touchRelease(b.code);
       e.preventDefault();
     }, { passive: false });
     el.addEventListener('touchcancel', () => {
-      if (b.hold) touchRelease(b.code);
+      touchRelease(b.code);
     });
     pad.appendChild(el);
   }

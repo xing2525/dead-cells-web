@@ -436,6 +436,8 @@ body.is-touch.playing .touch-ui{display:block;}
   align-items:center;
   justify-content:center;
   backdrop-filter:blur(2px);
+  transform:scale(var(--ui-scale,1));
+  transform-origin:bottom left;
 }
 .touch-knob{
   width:52px;
@@ -452,6 +454,8 @@ body.is-touch.playing .touch-ui{display:block;}
   width:196px;
   height:196px;
   pointer-events:none;
+  transform:scale(var(--ui-scale,1));
+  transform-origin:bottom right;
 }
 .touch-btn{
   position:absolute;
@@ -546,14 +550,11 @@ body.is-touch #rotate-hint .btn{
   body.is-touch #rotate-hint{display:none;}
 }
 
-/* 横屏矮屏：操作层整体缩小，避免挡视野 */
+/* 横屏矮屏：菜单压缩，操作层尺寸由 --ui-scale 自适应控制 */
 @media (orientation: landscape) and (max-height: 540px){
-  .touch-pad{transform:scale(.84);transform-origin:bottom right;}
   .touch-stick{
     width:104px;
     height:104px;
-    transform:scale(.9);
-    transform-origin:bottom left;
   }
   .touch-knob{width:44px;height:44px;}
   body.is-touch .menu-layout{padding:14px 26px;}
