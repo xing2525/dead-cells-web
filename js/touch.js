@@ -7,14 +7,18 @@
    仅在触屏设备上创建，桌面端完全无影响。
    ========================================================= */
 
-const TOUCH_BUTTONS = [
+const PAD_BUTTONS = [
   { code: 'KeyJ', label: '攻击', cls: 'attack' },
   { code: 'Space', label: '跳', cls: 'jump' },
   { code: 'KeyK', label: '翻滚', cls: 'roll' },
-  { code: 'KeyU', label: '技1', cls: 'skill1' },
-  { code: 'KeyI', label: '技2', cls: 'skill2' },
   { code: 'KeyL', label: '盾', cls: 'block', hold: true },
   { code: 'KeyE', label: '拾取', cls: 'pick' }
+];
+
+/* 技能键单独放在屏幕右上角，不遮挡战斗视野 */
+const SKILL_BUTTONS = [
+  { code: 'KeyU', label: '技1', cls: 'skill1' },
+  { code: 'KeyI', label: '技2', cls: 'skill2' }
 ];
 
 function isTouchDevice() {
@@ -109,9 +113,7 @@ function setupTouchControls() {
   stick.addEventListener('touchcancel', stickEnd);
 
   /* ---------- 按钮 ---------- */
-  const pad = document.createElement('div');
-  pad.className = 'touch-pad';
-  for (const b of TOUCH_BUTTONS) {
+  function makeButton(b) {
     const el = document.createElement('button');
     el.type = 'button';
     el.className = 'touch-btn ' + b.cls;
@@ -127,9 +129,23 @@ function setupTouchControls() {
     el.addEventListener('touchcancel', () => {
       touchRelease(b.code);
     });
-    pad.appendChild(el);
+    return el;
+  }
+
+  const pad = document.createElement('div');
+  pad.className = 'touch-pad';
+  for (const b of PAD_BUTTONS) {
+    pad.appendChild(makeButton(b));
   }
   root.appendChild(pad);
+
+  /* 技能键：右上角独立一排，避免挡住画面中央 */
+  const skillbar = document.createElement('div');
+  skillbar.className = 'touch-skillbar';
+  for (const b of SKILL_BUTTONS) {
+    skillbar.appendChild(makeButton(b));
+  }
+  root.appendChild(skillbar);
   document.body.appendChild(root);
 
   /* 触屏时也允许点按菜单按钮 */

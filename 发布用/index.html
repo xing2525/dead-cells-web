@@ -489,6 +489,25 @@ body.is-touch.playing .touch-ui{display:block;}
 .touch-btn.block{right:132px;bottom:96px;width:50px;height:50px;font-size:11px;}
 .touch-btn.pick{right:132px;bottom:26px;width:46px;height:46px;font-size:10.5px;}
 
+/* 技能键移到右上角，避免遮挡战斗视野 */
+.touch-skillbar{
+  position:absolute;
+  top:calc(86px + env(safe-area-inset-top));
+  right:max(16px, env(safe-area-inset-right));
+  display:flex;
+  gap:10px;
+  pointer-events:none;
+  transform:scale(var(--ui-scale,1));
+  transform-origin:top right;
+}
+.touch-skillbar .touch-btn{
+  position:static;
+  width:52px;
+  height:52px;
+  font-size:11px;
+  pointer-events:auto;
+}
+
 /* 触屏设备上把画布内容上移一点，避免手指挡住角色 */
 body.is-touch .menu-layout{padding-bottom:150px;}
 @media (max-width:820px){
@@ -10099,14 +10118,18 @@ function updatePickups(game, dt) {
    仅在触屏设备上创建，桌面端完全无影响。
    ========================================================= */
 
-const TOUCH_BUTTONS = [
+const PAD_BUTTONS = [
   { code: 'KeyJ', label: '攻击', cls: 'attack' },
   { code: 'Space', label: '跳', cls: 'jump' },
   { code: 'KeyK', label: '翻滚', cls: 'roll' },
-  { code: 'KeyU', label: '技1', cls: 'skill1' },
-  { code: 'KeyI', label: '技2', cls: 'skill2' },
   { code: 'KeyL', label: '盾', cls: 'block', hold: true },
   { code: 'KeyE', label: '拾取', cls: 'pick' }
+];
+
+/* 技能键单独放在屏幕右上角，不遮挡战斗视野 */
+const SKILL_BUTTONS = [
+  { code: 'KeyU', label: '技1', cls: 'skill1' },
+  { code: 'KeyI', label: '技2', cls: 'skill2' }
 ];
 
 function isTouchDevice() {
@@ -10201,9 +10224,7 @@ function setupTouchControls() {
   stick.addEventListener('touchcancel', stickEnd);
 
   /* ---------- 按钮 ---------- */
-  const pad = document.createElement('div');
-  pad.className = 'touch-pad';
-  for (const b of TOUCH_BUTTONS) {
+  function makeButton(b) {
     const el = document.createElement('button');
     el.type = 'button';
     el.className = 'touch-btn ' + b.cls;
@@ -10219,9 +10240,23 @@ function setupTouchControls() {
     el.addEventListener('touchcancel', () => {
       touchRelease(b.code);
     });
-    pad.appendChild(el);
+    return el;
+  }
+
+  const pad = document.createElement('div');
+  pad.className = 'touch-pad';
+  for (const b of PAD_BUTTONS) {
+    pad.appendChild(makeButton(b));
   }
   root.appendChild(pad);
+
+  /* 技能键：右上角独立一排，避免挡住画面中央 */
+  const skillbar = document.createElement('div');
+  skillbar.className = 'touch-skillbar';
+  for (const b of SKILL_BUTTONS) {
+    skillbar.appendChild(makeButton(b));
+  }
+  root.appendChild(skillbar);
   document.body.appendChild(root);
 
   /* 触屏时也允许点按菜单按钮 */

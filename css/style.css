@@ -480,6 +480,25 @@ body.is-touch.playing .touch-ui{display:block;}
 .touch-btn.block{right:132px;bottom:96px;width:50px;height:50px;font-size:11px;}
 .touch-btn.pick{right:132px;bottom:26px;width:46px;height:46px;font-size:10.5px;}
 
+/* 技能键移到右上角，避免遮挡战斗视野 */
+.touch-skillbar{
+  position:absolute;
+  top:calc(86px + env(safe-area-inset-top));
+  right:max(16px, env(safe-area-inset-right));
+  display:flex;
+  gap:10px;
+  pointer-events:none;
+  transform:scale(var(--ui-scale,1));
+  transform-origin:top right;
+}
+.touch-skillbar .touch-btn{
+  position:static;
+  width:52px;
+  height:52px;
+  font-size:11px;
+  pointer-events:auto;
+}
+
 /* 触屏设备上把画布内容上移一点，避免手指挡住角色 */
 body.is-touch .menu-layout{padding-bottom:150px;}
 @media (max-width:820px){
