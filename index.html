@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>死亡细胞 · 无间回廊</title>
+<meta name="theme-color" content="#060b0e">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 3c4 6 9 8 9 15a9 9 0 1 1-18 0c0-4 2-6 4-9 1 3 2 4 3 4 0-4 1-7 2-10z' fill='%2367e8f9'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+  <canvas id="game"></canvas>
+  <!-- 主菜单 -->
+  <section class="screen" id="screen-menu">
+    <div class="scrim"></div>
+    <div class="menu-layout">
+      <div class="menu-main">
+        <div class="kicker"><span class="kicker-line"></span>ROGUELIKE ACTION · PROTOTYPE</div>
+        <h1 class="logo">死亡细胞<span class="logo-en">DEAD CELLS</span></h1>
+        <p class="tagline">死亡不是终点。每一次倒下，都是下一次冲锋的养料。</p>
+
+        <div class="menu-buttons">
+          <button class="btn primary" id="btn-start">开始探索</button>
+          <button class="btn ghost" id="btn-controls">操作说明</button>
+        </div>
+
+        <div class="controls-card hidden" id="controls-card">
+          <div class="key-row"><span class="keys"><kbd>A</kbd><kbd>D</kbd></span><span>左右移动</span></div>
+          <div class="key-row"><span class="keys"><kbd>SPACE</kbd></span><span>跳跃 / 二段跳（空中再按一次）</span></div>
+          <div class="key-row"><span class="keys"><kbd>J</kbd></span><span>攻击 · 近战连击 / 远程射击 / 空中下劈</span></div>
+          <div class="key-row"><span class="keys"><kbd>K</kbd></span><span>翻滚 · 无敌帧 · 翻滚后攻击必定暴击</span></div>
+          <div class="key-row"><span class="keys"><kbd>Q</kbd></span><span>切换主副武器</span></div>
+          <div class="key-row"><span class="keys"><kbd>L</kbd></span><span>举盾格挡 · 刚举盾瞬间为完美格挡</span></div>
+          <div class="key-row"><span class="keys"><kbd>U</kbd></span><span>技能一（飞刀等）</span></div>
+          <div class="key-row"><span class="keys"><kbd>I</kbd></span><span>技能二（手雷等）</span></div>
+          <div class="key-row"><span class="keys"><kbd>F</kbd></span><span>治疗药水</span></div>
+          <div class="key-row"><span class="keys"><kbd>E</kbd></span><span>拾取装备 / 图纸 · 进入下一区域</span></div>
+          <div class="key-row"><span class="keys"><kbd>ESC</kbd></span><span>暂停 / 继续</span></div>
+        </div>
+
+        <div class="meta-strip">
+          <div class="meta-item"><span>细胞</span><b id="menu-cells">0</b></div>
+          <div class="meta-item"><span>最深区域</span><b id="menu-best">1</b></div>
+          <div class="meta-item"><span>累计死亡</span><b id="menu-runs">0</b></div>
+        </div>
+
+        <div class="panel weapon-panel">
+          <div class="panel-head">
+            <h2>武器库</h2>
+            <span id="weapon-current">选择开局主手</span>
+          </div>
+          <div class="weapon-list" id="weapon-picker"></div>
+        </div>
+
+        <div class="panel shop-panel">
+          <div class="panel-head">
+            <h2>细胞强化</h2>
+            <span>永久生效</span>
+          </div>
+          <div class="shop-list" id="shop-menu"></div>
+        </div>
+      </div>
+      <div class="menu-hint">
+        <span class="hint-line"></span>
+        <p>键盘 / 手机触屏均可游玩 · 手机请用同一 Wi-Fi 打开服务器地址</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 死亡结算 -->
+  <section class="screen hidden" id="screen-death">
+    <div class="scrim death-scrim"></div>
+    <div class="death-inner">
+      <div class="kicker center"><span class="kicker-line"></span>RUN TERMINATED<span class="kicker-line"></span></div>
+      <h1 class="death-title">你死了</h1>
+      <p class="death-quote" id="death-quote">血肉会腐朽，细胞会重生。</p>
+
+      <div class="run-stats">
+        <div><span>抵达区域</span><b id="death-stage">1</b></div>
+        <div><span>击杀</span><b id="death-kills">0</b></div>
+        <div><span>金币</span><b id="death-gold">0</b></div>
+        <div><span>收获细胞</span><b id="death-cells">0</b></div>
+      </div>
+
+      <div class="panel shop-panel death-shop">
+        <div class="panel-head">
+          <h2>细胞强化</h2>
+          <span>剩余细胞 <b id="death-bank">0</b></span>
+        </div>
+        <div class="shop-list" id="shop-death"></div>
+      </div>
+
+      <div class="menu-buttons center-buttons">
+        <button class="btn primary" id="btn-retry">再次挑战</button>
+        <button class="btn ghost" id="btn-death-menu">返回营地</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 暂停 -->
+  <section class="screen hidden" id="screen-pause">
+    <div class="scrim pause-scrim"></div>
+    <div class="pause-inner panel">
+      <div class="kicker"><span class="kicker-line"></span>PAUSED</div>
+      <h2 class="pause-title">暂停</h2>
+      <div class="pause-grid">
+        <div class="key-row"><span class="keys"><kbd>A</kbd><kbd>D</kbd></span><span>移动</span></div>
+        <div class="key-row"><span class="keys"><kbd>SPACE</kbd></span><span>跳跃</span></div>
+        <div class="key-row"><span class="keys"><kbd>J</kbd></span><span>攻击</span></div>
+        <div class="key-row"><span class="keys"><kbd>K</kbd></span><span>翻滚</span></div>
+        <div class="key-row"><span class="keys"><kbd>Q</kbd></span><span>换武器</span></div>
+        <div class="key-row"><span class="keys"><kbd>L</kbd></span><span>举盾</span></div>
+        <div class="key-row"><span class="keys"><kbd>U</kbd></span><span>技能一</span></div>
+        <div class="key-row"><span class="keys"><kbd>I</kbd></span><span>技能二</span></div>
+        <div class="key-row"><span class="keys"><kbd>F</kbd></span><span>药水</span></div>
+        <div class="key-row"><span class="keys"><kbd>E</kbd></span><span>拾取 / 传送门</span></div>
+      </div>
+      <div class="menu-buttons column">
+        <button class="btn primary" id="btn-resume">继续征战</button>
+        <button class="btn ghost" id="btn-pause-restart">重新开始</button>
+        <button class="btn ghost" id="btn-pause-menu">返回营地</button>
+      </div>
+    </div>
+  </section>
+  <!-- 竖屏提示：手机请横屏游玩 -->
+  <div id="rotate-hint">
+    <div class="rotate-phone"></div>
+    <p>请旋转手机<b>横屏</b>游玩</p>
+    <span>横屏才能看到完整战场与操作按钮</span>
+    <button class="btn primary" id="btn-landscape" type="button">一键横屏</button>
+  </div>
+</div>
+
+<script src="js/utils.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/data.js"></script>
+<script src="js/items.js"></script>
+<script src="js/level.js"></script>
+<script src="js/entities.js"></script>
+<script src="js/pixel.js"></script>
+<script src="js/draw_player.js"></script>
+<script src="js/draw_enemies.js"></script>
+<script src="js/render.js"></script>
+<script src="js/hud.js"></script>
+<script src="js/game.js"></script>
+<script src="js/combat.js"></script>
+<script src="js/touch.js"></script>
+</body>
+</html>

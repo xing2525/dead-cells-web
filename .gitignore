@@ -1,0 +1,6 @@
+# IDE / 本地缓存
+.idea/
+.screenshots/
+.trae-html-share-packages/
+__pycache__/
+*.pyc
